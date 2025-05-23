@@ -14,7 +14,7 @@ typedef struct {
 
 Piece board[BOARD_SIZE][BOARD_SIZE];
 
-// Inicializa o tabuleiro
+// Inicializa o tabuleiro com as peças nas posições padrão
 void initBoard() {
     for (int i = 0; i < BOARD_SIZE; i++)
         for (int j = 0; j < BOARD_SIZE; j++)
@@ -37,6 +37,7 @@ void initBoard() {
     board[7][4] = (Piece){KING, WHITE};
 }
 
+// Retorna o caractere representando a peça (maioria em maiúsculo p/ brancas)
 char getPieceChar(Piece piece) {
     if (piece.color == WHITE) {
         switch (piece.type) {
@@ -62,7 +63,9 @@ char getPieceChar(Piece piece) {
     return '.';
 }
 
+// Mostra o tabuleiro no console
 void printBoard() {
+    printf("\n");
     for (int i = 0; i < BOARD_SIZE; i++) {
         printf("%d ", 8 - i);
         for (int j = 0; j < BOARD_SIZE; j++) {
@@ -70,10 +73,10 @@ void printBoard() {
         }
         printf("\n");
     }
-    printf("  a b c d e f g h\n");
+    printf("  a b c d e f g h\n\n");
 }
 
-// Converte "e2" -> linha=6, coluna=4
+// Converte coordenadas do tipo "e2" em linha/coluna (0-7)
 int parsePosition(char *pos, int *row, int *col) {
     if (strlen(pos) != 2) return 0;
     *col = pos[0] - 'a';
@@ -81,13 +84,26 @@ int parsePosition(char *pos, int *row, int *col) {
     return (*col >= 0 && *col < 8 && *row >= 0 && *row < 8);
 }
 
+// Move uma peça e verifica se um rei foi capturado
 int movePiece(int fromRow, int fromCol, int toRow, int toCol, Color turn) {
     Piece src = board[fromRow][fromCol];
+    Piece dst = board[toRow][toCol];
+
     if (src.type == EMPTY || src.color != turn) {
         printf("Movimento inválido. Tente novamente.\n");
         return 0;
     }
 
+    // Verifica se capturou o rei adversário
+    if (dst.type == KING && dst.color != NONE && dst.color != turn) {
+        board[toRow][toCol] = src;
+        board[fromRow][fromCol] = (Piece){EMPTY, NONE};
+        printBoard();
+        printf("O jogador %s venceu! O rei foi capturado.\n", turn == WHITE ? "Branco" : "Preto");
+        exit(0); // Encerra o jogo
+    }
+
+    // Move normal
     board[toRow][toCol] = src;
     board[fromRow][fromCol] = (Piece){EMPTY, NONE};
     return 1;
@@ -111,7 +127,6 @@ int main() {
         }
 
         if (movePiece(fromRow, fromCol, toRow, toCol, turn)) {
-            // Alterna o turno
             turn = (turn == WHITE) ? BLACK : WHITE;
         }
     }
